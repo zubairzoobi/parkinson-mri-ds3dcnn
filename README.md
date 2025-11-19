@@ -12,10 +12,15 @@ Depthwise separable 3D CNN designed for volumetric MRI.
 Key elements:
 
 • 35-layer architecture
+
 • Two depthwise separable 3D convolutional blocks (32 and 64 filters)
+
 • ReLU activations
+
 • 3D max-pooling layers
+
 • Fully connected classifier with three outputs (NC, Prodromal, PD)
+
 • Softmax for final probability distribution
 
 **⚙️ Training Workflow**
