@@ -8,7 +8,9 @@ Develop a 3-class MRI-based model that identifies early Parkinson’s disease, w
 
 **Model Architecture**
 Depthwise separable 3D CNN designed for volumetric MRI.
+
 Key elements:
+
 • 35-layer architecture
 • Two depthwise separable 3D convolutional blocks (32 and 64 filters)
 • ReLU activations
