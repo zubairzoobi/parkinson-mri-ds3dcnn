@@ -68,7 +68,7 @@ Loss: Cross-Entropy
 
 Epochs: up to 100 with early stopping
 
-Batch size: 16
+Batch size: 12
 
 Metrics: Accuracy, Precision, Recall, F1-score, ROC-AUC
 
