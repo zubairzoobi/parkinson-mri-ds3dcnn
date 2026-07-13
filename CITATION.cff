@@ -31,6 +31,6 @@ keywords:
   - Grad-CAM
   - neuroimaging
 
-repository-code: "https://github.com/zubairzoobi/Classification-of-Parkinson-s-using-DS3DCNNs"
+repository-code: "https://github.com/zubairzoobi/parkinson-mri-ds3dcnn"
 
-url: "https://github.com/zubairzoobi/Classification-of-Parkinson-s-using-DS3DCNNs"
+url: "https://github.com/zubairzoobi/parkinson-mri-ds3dcnn"
