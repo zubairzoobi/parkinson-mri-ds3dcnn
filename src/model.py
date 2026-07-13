@@ -8,19 +8,14 @@ from torch import nn
 
 class DepthwiseSeparableConv3D(nn.Module):
     """
-    Depthwise separable three-dimensional convolution.
+    Depthwise separable 3D convolution block.
 
-    The operation consists of:
+    This block contains:
 
-    1. A depthwise 3D convolution that applies one spatial
-       filter independently to each input channel.
-
-    2. A pointwise 1 x 1 x 1 convolution that combines
-       information across channels.
-
-    3. Batch normalization.
-
-    4. ReLU activation.
+    1. Depthwise 3D convolution
+    2. Pointwise 1 x 1 x 1 convolution
+    3. Batch normalization
+    4. ReLU activation
     """
 
     def __init__(
@@ -32,6 +27,8 @@ class DepthwiseSeparableConv3D(nn.Module):
     ) -> None:
         super().__init__()
 
+        # Depthwise convolution applies one spatial filter
+        # independently to every input channel.
         self.depth_conv = nn.Conv3d(
             in_channels=in_channels,
             out_channels=in_channels,
@@ -41,6 +38,8 @@ class DepthwiseSeparableConv3D(nn.Module):
             bias=False,
         )
 
+        # Pointwise convolution combines information
+        # across different channels.
         self.point_conv = nn.Conv3d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -48,15 +47,15 @@ class DepthwiseSeparableConv3D(nn.Module):
             bias=False,
         )
 
-        self.batch_norm = nn.BatchNorm3d(
+        self.bn = nn.BatchNorm3d(
             out_channels
         )
 
-        self.activation = nn.ReLU(
+        self.act = nn.ReLU(
             inplace=True
         )
 
-        # Kaiming initialization is suitable for ReLU networks.
+        # Weight initialization.
         nn.init.kaiming_normal_(
             self.depth_conv.weight,
             nonlinearity="relu",
@@ -72,31 +71,30 @@ class DepthwiseSeparableConv3D(nn.Module):
         x: torch.Tensor,
     ) -> torch.Tensor:
         """
-        Apply depthwise convolution, pointwise convolution,
-        batch normalization, and ReLU activation.
+        Perform the forward pass through the convolution block.
         """
 
         x = self.depth_conv(x)
         x = self.point_conv(x)
-        x = self.batch_norm(x)
-        x = self.activation(x)
+        x = self.bn(x)
+        x = self.act(x)
 
         return x
 
 
 class DS3DCNN(nn.Module):
     """
-    Depthwise Separable 3D CNN for three-class MRI classification.
+    Depthwise Separable 3D CNN for MRI classification.
+
+    Default input MRI shape:
+
+        193 x 229 x 193
 
     Default class order:
 
-    NC = 0
-    PD = 1
-    Prodromal = 2
-
-    Default input shape:
-
-    193 x 229 x 193
+        NC = 0
+        PD = 1
+        Prodromal = 2
     """
 
     def __init__(
@@ -119,11 +117,22 @@ class DS3DCNN(nn.Module):
             )
 
         self.input_shape = tuple(
-            int(value)
-            for value in input_shape
+            int(dimension)
+            for dimension in input_shape
         )
 
-        # First depthwise separable convolution block.
+        if any(
+            dimension < 8
+            for dimension in self.input_shape
+        ):
+            raise ValueError(
+                "Each MRI spatial dimension must be "
+                "at least 8 voxels."
+            )
+
+        # Block 1:
+        # Input channels: 1
+        # Output channels: 32
         self.block1 = DepthwiseSeparableConv3D(
             in_channels=1,
             out_channels=32,
@@ -133,11 +142,13 @@ class DS3DCNN(nn.Module):
             kernel_size=2
         )
 
-        self.dropout1 = nn.Dropout3d(
-            dropout_3d
+        self.drop1 = nn.Dropout3d(
+            p=dropout_3d
         )
 
-        # Second depthwise separable convolution block.
+        # Block 2:
+        # Input channels: 32
+        # Output channels: 64
         self.block2 = DepthwiseSeparableConv3D(
             in_channels=32,
             out_channels=64,
@@ -147,11 +158,13 @@ class DS3DCNN(nn.Module):
             kernel_size=2
         )
 
-        self.dropout2 = nn.Dropout3d(
-            dropout_3d
+        self.drop2 = nn.Dropout3d(
+            p=dropout_3d
         )
 
-        # Third depthwise separable convolution block.
+        # Block 3:
+        # Input channels: 64
+        # Output channels: 128
         self.block3 = DepthwiseSeparableConv3D(
             in_channels=64,
             out_channels=128,
@@ -161,12 +174,18 @@ class DS3DCNN(nn.Module):
             kernel_size=2
         )
 
-        self.dropout_classifier = nn.Dropout(
-            dropout_fc
+        self.drop_fc = nn.Dropout(
+            p=dropout_fc
         )
 
-        # Three max-pooling operations reduce each spatial
-        # dimension by a factor of 8.
+        # Three max-pooling operations divide each
+        # spatial dimension by approximately 8.
+        #
+        # Default input:
+        # 193 x 229 x 193
+        #
+        # After pooling:
+        # 24 x 28 x 24
         pooled_shape = tuple(
             dimension // 8
             for dimension in self.input_shape
@@ -179,17 +198,18 @@ class DS3DCNN(nn.Module):
             * pooled_shape[2]
         )
 
-        self.classifier = nn.Linear(
+        self.fc = nn.Linear(
             in_features=flattened_features,
             out_features=num_classes,
         )
 
+        # Initialize the fully connected layer.
         nn.init.xavier_normal_(
-            self.classifier.weight
+            self.fc.weight
         )
 
         nn.init.constant_(
-            self.classifier.bias,
+            self.fc.bias,
             0,
         )
 
@@ -198,39 +218,60 @@ class DS3DCNN(nn.Module):
         x: torch.Tensor,
     ) -> torch.Tensor:
         """
-        Perform the forward pass.
+        Perform the DS-3DCNN forward pass.
 
         Parameters
         ----------
         x:
-            MRI tensor with shape:
+            Input MRI tensor with shape:
 
             batch_size x 1 x depth x height x width
 
         Returns
         -------
-        logits:
-            Raw output logits for the three classes.
+        torch.Tensor:
+            Raw classification logits with shape:
+
+            batch_size x num_classes
         """
 
+        if x.ndim != 5:
+            raise ValueError(
+                "Expected a five-dimensional input tensor "
+                "with shape [batch, channel, depth, height, width], "
+                f"but received shape {tuple(x.shape)}."
+            )
+
+        if x.shape[1] != 1:
+            raise ValueError(
+                "The model expects one MRI input channel, "
+                f"but received {x.shape[1]} channels."
+            )
+
+        # First convolution block.
         x = self.block1(x)
         x = self.pool1(x)
-        x = self.dropout1(x)
+        x = self.drop1(x)
 
+        # Second convolution block.
         x = self.block2(x)
         x = self.pool2(x)
-        x = self.dropout2(x)
+        x = self.drop2(x)
 
+        # Third convolution block.
         x = self.block3(x)
         x = self.pool3(x)
 
+        # Flatten all convolution features.
         x = torch.flatten(
             x,
             start_dim=1,
         )
 
-        x = self.dropout_classifier(x)
+        x = self.drop_fc(x)
 
-        logits = self.classifier(x)
+        # Raw logits are returned.
+        # CrossEntropyLoss applies softmax internally.
+        x = self.fc(x)
 
-        return logits
+        return x
