@@ -1,0 +1,37 @@
+seed: 42
+
+data:
+  directory: /absolute/path/to/dataset
+  classes:
+    - NC
+    - PD
+    - Prodromal
+  input_shape:
+    - 193
+    - 229
+    - 193
+  num_workers: 4
+  pin_memory: true
+
+model:
+  num_classes: 3
+  dropout_3d: 0.10
+  dropout_fc: 0.20
+
+training:
+  batch_size: 8
+  max_epochs: 200
+  learning_rate: 0.0003
+  weight_decay: 0.00001
+  validation_fraction: 0.15
+  patience: 30
+  min_delta: 0.0001
+  number_of_folds: 5
+  gradient_clip_norm: 1.0
+  scheduler_factor: 0.5
+  scheduler_patience: 10
+  minimum_learning_rate: 0.000001
+
+output:
+  directory: outputs
+  show_plots: false
