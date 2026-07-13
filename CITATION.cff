@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+
+message: "If you use this software in your research, please cite it using the metadata provided in this file."
+
+title: "Parkinson's Disease Classification from 3D Brain MRI using DS-3DCNN"
+
+type: software
+
+authors:
+  - family-names: "Zubair"
+    given-names: "Muhammad"
+    email: "zubairzoobi93@gmail.com"
+
+abstract: >
+  A PyTorch-based medical imaging project for three-class
+  classification of Normal Control, Parkinson's Disease,
+  and Prodromal subjects from T1-weighted three-dimensional
+  brain MRI. The repository implements a depthwise separable
+  3D convolutional neural network, stratified five-fold
+  cross-validation, checkpoint evaluation, and three-dimensional
+  Grad-CAM interpretability.
+
+keywords:
+  - Parkinson's disease
+  - medical imaging
+  - brain MRI
+  - deep learning
+  - PyTorch
+  - 3D CNN
+  - depthwise separable convolution
+  - Grad-CAM
+  - neuroimaging
+
+repository-code: "https://github.com/zubairzoobi/Classification-of-Parkinson-s-using-DS3DCNNs"
+
+url: "https://github.com/zubairzoobi/Classification-of-Parkinson-s-using-DS3DCNNs"
