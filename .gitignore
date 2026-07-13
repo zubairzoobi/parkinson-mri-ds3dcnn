@@ -1,0 +1,51 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest cache
+.pytest_cache/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# VS Code and IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Private MRI data
+data/NC/
+data/PD/
+data/Prodromal/
+
+# NIfTI medical imaging files
+*.nii
+*.nii.gz
+
+# Trained model checkpoints
+*.pth
+*.pt
+*.ckpt
+
+# Generated experiment outputs
+outputs/
+checkpoints/
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Environment variables and secrets
+.env
